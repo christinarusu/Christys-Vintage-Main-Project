@@ -1,9 +1,11 @@
 #Christina Rusu
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from dotenv import load_dotenv
 import pickle
 import os
+import requests
+
 
 #Initiates Flask App
 app = Flask(__name__)
@@ -27,12 +29,14 @@ def index():
             password = request.form.get('password')
             password2 = request.form.get('password2') #confirm password
             name = request.form.get('name')
+            username = request.form.get('username')
             address = request.form.get('address')
             if password == password2:  # if passwords match
                 if email not in user_dict.keys(): # if user has not previously registered
                     user_dict[email] = {
                         "password": password,
-                        "name": name,  # Default username from email
+                        "name": name, 
+                        "username": username,
                         "email": email,
                         "address": address,
                         "bags": []}
@@ -62,6 +66,37 @@ def index():
             else:
                 message = "Email or Password do not match"
     return render_template('index.html', message=message)
+
+@app.route('/generate-username', methods=['GET'])
+def generate_username():
+    try:
+        response = requests.get(
+            "http://localhost:3000/usernames",
+            params={"count": 10},
+            timeout=5
+        )
+
+        response.raise_for_status()
+
+        usernames = response.json()["usernames"]
+
+        # Check usernames against existing registered users
+        existing_usernames = [
+            user.get("username")
+            for user in user_dict.values()
+        ]
+
+        # Select a username that has not already been registered
+        for username in usernames:
+            if username not in existing_usernames:
+                return jsonify({"username": username})
+
+        return jsonify({"error": "Could not find an available username"}), 503
+
+    except requests.exceptions.RequestException:
+        return jsonify({
+            "error": "Username generator service is unavailable"
+        }), 503
 
 @app.route('/home', methods=['GET', 'POST'])
 def home():
@@ -169,6 +204,7 @@ def account():
     #pulls user info to be rendered on the account page
     user_info = {
         "name": matched_user.get("name"),
+        "username": matched_user.get("username"),
         "email": matched_user.get("email"),
         "address": matched_user.get("address"),
         "bags": matched_user.get("bags")

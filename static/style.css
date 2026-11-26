@@ -85,6 +85,11 @@ input{
     margin-bottom: 10px;
 }
 
+#usrname_bttn{
+    margin-top: -10px;
+    padding: 5px;
+}
+
 #searchbutton{
     background-color: lightpink;
     cursor: pointer;

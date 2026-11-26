@@ -28,6 +28,18 @@
             <form id="credential-form" method="POST" action="/">
                 <label for="name">Name:</label><br>
                 <input id="name" type="text" id="name" name="name" required><br>
+                <label for="username">Username:</label><br>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        readonly
+                        required
+                    >
+                    <button id="usrname_bttn" type="button" onclick="generateUsername()">
+                        Generate Username
+                    </button>
+                <br>
 
                 <label for="address">Address:</label><br>
                 <input id="address" type="address" id="address" name="address" required><br>
@@ -68,6 +80,30 @@
             <button onclick="closeModal()">Close</button>
         </div>
     </div>
+    <script>
+        async function generateUsername() {
+
+            const message = document.getElementById("usernameMessage");
+            const usernameInput = document.getElementById("username");
+
+            try {
+                const response = await fetch("/generate-username");
+                const data = await response.json();
+
+                if (!response.ok) {
+                    message.textContent = data.error;
+                    return;
+                }
+
+                usernameInput.value = data.username;
+                
+                toggleModal("Username generated successfully!")
+
+            } catch (error) {
+                message.textContent = "Unable to generate username.";
+            }
+        }
+    </script>
     <script src="{{ url_for('static', filename='index.js') }}"></script>
 
     <!-- Automatically trigger the modal if Flask passed a message -->
